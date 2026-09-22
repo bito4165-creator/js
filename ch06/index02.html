@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>ch06 index02.html 파일</h1>
+    <script>
+      const timer = {
+        seconds: 3,
+        label: "요리 타이머",
+        start: function () {
+          console.log(this.label + " 시작  " + this.seconds + "초");
+
+          setTimeout(function () {
+            console.log(this.label + " :  요리 끝");
+          }, 3000);
+        },
+      };
+
+      timer.start();
+      // 이 메서드 안에 콜백 함수에서 사용하고 있는 this 는 window을 가리킨다.
+
+      console.log("3. forEach 에서도 같은 일이 발생합니다 ");
+
+      const shop = {
+        name2: "코딩상점",
+        products: ["마우스", "키보드", "모니터"],
+        printAll: function () {
+          // 여기서의 this 는 shop 를 가리킨다.
+          console.log("[[[" + this.name2 + " ]]]");
+          this.products.forEach(function (product) {
+            console.log(this.name2 + " - " + product);
+            // 이 시점에 this 는 window 이다.
+          });
+        },
+      };
+
+      shop.printAll();
+
+      console.log("4. 옛날 방식에 해결 : this 를 다른 변수에 담아 두기 ");
+
+      const shop2 = {
+        name2: "코딩상점",
+        products: ["마우스", "키보드", "모니터"],
+        printAll: function () {
+          const self = this; // 메서드 안에서 this가 shop2일 때 변수에 담아 둔다
+          this.products.forEach(function (product) {
+            console.log(self.name2 + " - " + product);
+            // 이 시점에 this 는 window 이다.
+          });
+        },
+      };
+
+      shop2.printAll();
+    </script>
+  </body>
+</html>

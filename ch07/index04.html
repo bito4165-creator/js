@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>ch07 index04.html 파일</h1>
+
+    <script>
+      let stock = 0;
+      console.log(stock || "재고없음");
+
+      // 2. ?? (null 병합 연산자) null 과 undefined 일 때만 오른쪽 값을 쓴다.
+      console.log(stock ?? "재고없음"); // 0은 null도 아니고 undefined도 아니므로 그대로 0이 된다
+
+      let discount = null;
+      console.log(discount ?? 0); // 0이 출력이 된다.
+
+      // 3.
+      let comment = "";
+      console.log(comment || "댓글없음"); // 댓글없음
+      console.log(comment ?? "댓글없음"); // ""
+
+      let isAgree = false;
+      console.log(isAgree || true); // true
+      console.log(isAgree ?? true); // false
+
+      // 진짜 없을 때 ?? 오른쪽 기본값으로 설정 한다.
+    </script>
+  </body>
+</html>

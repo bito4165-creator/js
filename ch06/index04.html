@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      button {
+        display: block;
+        margin-bottom: 12px;
+        padding: 8px 16px;
+      }
+      .clicked {
+        background-color: lightgreen;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ch06 index04.html 파일</h1>
+
+    <button id="btn1" class="a b c">1. 일반 함수 this는 이 버튼</button>
+    <button id="btn2">2. 화살표 함수 this는 window</button>
+    <button id="btn3">3. event.currentTarger : 어느쪽이든 이 버튼</button>
+    <button class="count-btn">4. 눌린 횟수 : 0</button>
+    <button class="count-btn">5. 눌린 횟수 : 0</button>
+
+    <script>
+      // 1. 일반 함수 핸들러 : 브라우저가 "요소.핸들러()" 처럼 호출하므로 this 는
+      // 그 요소가 된다.
+      document.getElementById("btn1").addEventListener("click", function () {
+        console.log(this);
+        this.classList.toggle("clicked");
+      });
+
+      // 2. 화살표 함수 핸들러 :
+      // 자기 this 가 없어서 바깥(전역)의 this 인 window 이다.
+      document.getElementById("btn2").addEventListener("click", () => {
+        console.log(this); // window 이디
+        //this.classList.toggle("clicked");
+      });
+
+      // 3. event.currentTarget 사용 함
+      // 브라우저가 첫 번째 인수로 넘겨준 이벤트 객체를 받아서 처리할 수 있다.
+      document.getElementById("btn3").addEventListener("click", (event) => {
+        console.log(event.currentTarget); // <button id="btn3"> .. </button>
+        event.currentTarget.classList.toggle("clicked");
+      });
+
+      // 4. 같은 핸들러를 여러 버튼에 붙일 때 event.currentTarget은 매우 유용하다.
+      // 어느 버튼이 눌렸는지 핸들러 하나로 구분할 수 있고 예를 들어 버튼 요소가
+      // 백개라면 매번 백개의 핸들러를 만들 필요가 없게 된다.
+      const countButtons = document.querySelectorAll(".count-btn");
+      console.log(countButtons);
+      countButtons.forEach((button) => {
+        let count = 0;
+        button.addEventListener("click", (event) => {
+          count++;
+          event.currentTarget.textContent = "눌린 횟수 : " + count;
+        });
+      });
+    </script>
+  </body>
+</html>
