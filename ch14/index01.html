@@ -12,6 +12,102 @@
       form {
         padding: 15px;
         border: 1px solid #ccc;
+        width: 300px;
+        margin-top: 20px;
+      }
+      input {
+        display: block;
+        width: 80%;
+        margin: 10px;
+        padding: 5px;
+      }
+      .help {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ch14 index01.html 파일</h1>
+
+    <form action="https://www.naver.com" method="get">
+      <input type="text" name="userName" value="홍길동" placeholder="이름" />
+      <input
+        type="text"
+        name="userTel"
+        value="010-1234-1234"
+        placeholder="연락처(010-1234-1234)"
+      />
+      <span class="help" id="telHelp"></span>
+      <button type="submit">제출</button>
+    </form>
+
+    <script>
+      const formEl = document.forms[0];
+
+      // form.El.element["name 속성값"] 으로 입력란을 찾을 수 있다.
+      const nameInput = formEl.elements["userName"];
+      const telInput = formEl.elements["userTel"];
+      const telHelp = document.getElementById("telHelp");
+
+      // 정규식 리터럴이고 이렇게 쓰면 JS가 RegEx 객체를만들어 준다.
+      const phoneRegex = /^010-?\d{4}-?\d{4}$/;
+
+      formEl.addEventListener("submit", () => {
+        event.preventDefault(); // 브러우저야, 잠깐 멈춰
+        // stopPropagation, 이 벨트를 우리 올려 보내지 마 이고,
+        //  preventDefault(), 브라우저에게 원래 하던일 하지마
+
+        // 이름 유효성 검사
+        if (nameInput.value.trim() == "") {
+          alert("이름을 입력해주세요");
+          nameInput.focus();
+          return;
+        }
+        // 전화번호 유효성 검사
+        if (!telpattern.test(telInput.value.trim())) {
+          alert("연락처형식이 올바르지 않습니다.");
+          telInput.focus();
+          return;
+        }
+
+        // 통과 후 FormDate로 입력값을 한번에 모아서 직접 서버로 제출
+        const data = Object.fromEntries(new FormData(formEl));
+        console.log(data);
+
+        // 실제 서버에 제출
+        formEl.submit();
+      });
+
+        // 입력하는 동안 바로 안내 : input 이벤트는 글자를 칠때마다 일어난다.
+        telInput.addEventListener("input", () => {
+          if (telpattern.test(telInput.value)) {
+            telHelp.textContent = "올바른 형식입니다.";
+            telHelp.style.color = "green";
+          } else {
+            telHelp.textContent = "010-1234-1234 형식 이어야합니다.";
+            telHelp.style.color = "red";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="../reset.css" />
+    <style>
+      body {
+        padding: 20px;
+      }
+      form {
+        padding: 15px;
+        border: 1px solid #ccc;
         width: 330px;
         margin-top: 20px;
       }
