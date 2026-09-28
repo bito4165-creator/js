@@ -29,6 +29,7 @@
       }
       li.done {
         text-decoration: line-through;
+        background-color: gray;
       }
       button {
         padding: 5px 10px;
@@ -64,23 +65,41 @@
       const itemListEl = document.querySelector("#itemList");
 
       // 중요!
-      // 1. 이벤트 위임 : 부모 요소 하나에만 리스너를 등록한다. (ul)
+      // 1. 이벤트 위임 : 부모 요소 하나에만 리스너를 등록한다 (ul)
       itemListEl.addEventListener("click", (e) => {
-        // 클릭된 요소가 삭제 버튼일때만 동작한다.
-        if (e.target.classList.contains("delete-btn")) {
-          // .target.parentElement.remove <- 삭제 버튼의 부모 li 태그를 가르킴
-          // closest :그 요소 자기 자신부터 시작해서 부모, 그 부모위로 올라가면서 선택자
-          // 에 맞는 가장 가까운 조상 요소를 하나 찾아서 돌려준다. 없으면 null 반환
-          const isConfirmed = confirm("정말 삭제하시겠습니까?");
-          if (isConfirmed) {
-            e.target.closest("li").remove();
-          }
-        }
+        const li = e.target.closest("li");
 
-        if (e.target.classList.contains("done-btn")) {
-          e.target.closest("li").classList.toggle("done");
+        // 클릭된 요소가 삭제 버튼일 때만 동작한다.
+        if (e.target.classList.contains("delete-btn")) {
+          // e.target.parentElement <-- 삭제 버튼의 부모 li 태그를 가리킴
+          // closest : 그 요소 자기 자신부터 시작해서 부모, 그 부모위로 올라가면서 선택자
+          // 에 맞는 가장 가까운 조상 요소를 하나 찾아서 돌려 준다. 없으면 null 반환
+          const isOk = confirm("정말 삭제하시겠습니까?"); // true, false
+          if (isOk) {
+            li.remove();
+          }
+        } else if (e.target.classList.contains("done-btn")) {
+          li.classList.toggle("done");
         }
       });
+      // 중요!
+      // 1. 이벤트 위임 : 부모 요소 하나에만 리스너를 등록한다. (ul)
+      // itemListEl.addEventListener("click", (e) => {
+      //   // 클릭된 요소가 삭제 버튼일때만 동작한다.
+      //   if (e.target.classList.contains("delete-btn")) {
+      //     // .target.parentElement.remove <- 삭제 버튼의 부모 li 태그를 가르킴
+      //     // closest :그 요소 자기 자신부터 시작해서 부모, 그 부모위로 올라가면서 선택자
+      //     // 에 맞는 가장 가까운 조상 요소를 하나 찾아서 돌려준다. 없으면 null 반환
+      //     const isConfirmed = confirm("정말 삭제하시겠습니까?");
+      //     if (isConfirmed) {
+      //       e.target.closest("li").remove();
+      //     }
+      //   }
+
+      //   if (e.target.classList.contains("done-btn")) {
+      //     e.target.closest("li").classList.toggle("done");
+      //   }
+      // });
 
       btnAddEl.addEventListener("click", () => {
         const currentCount = itemListEl.children.length;
