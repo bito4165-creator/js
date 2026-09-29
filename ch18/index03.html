@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>도시별 날씨 대시보드</title>
+  <!-- Chart.js CDN 라이브러리 추가 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- GNB / 헤더 -->
+  <header>
+    <div class="header-container">
+      <h1>Weather Dashboard</h1>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- 검색 영역 -->
+    <section class="search-section">
+      <div class="input-group">
+        <input 
+          type="text" 
+          id="cityInput" 
+          placeholder="도시명 또는 국가명을 입력하세요 (예: 서울, Sydney, 일본)"
+          autocomplete="off"
+        >
+        <button id="searchBtn">검색</button>
+      </div>
+    </section>
+
+    <!-- 오류 메시지 및 로딩 -->
+    <div id="errorMessage" class="error-message hidden"></div>
+    <div id="loading" class="loading hidden">데이터를 조회하고 있습니다...</div>
+
+    <!-- 대시보드 데이터 그리드 -->
+    <main id="resultContainer" class="result-container hidden">
+      <!-- 패널 1: 위치 정보 -->
+      <section class="location-card">
+        <h2 id="cityName">-</h2>
+        <p id="countryName" class="country">-</p>
+        <div class="coordinates">
+          <span>위도: <strong id="latitude">-</strong></span>
+          <span>경도: <strong id="longitude">-</strong></span>
+        </div>
+      </section>
+
+      <!-- 패널 2: 현재 날씨 정보 -->
+      <section class="weather-card">
+        <div class="weather-main">
+          <span id="weatherIcon" class="weather-icon">☀️</span>
+          <div class="temp-box">
+            <span id="temperature" class="temp">--</span>
+            <span class="unit">°C</span>
+          </div>
+        </div>
+        <div id="weatherStatus" class="weather-status">--</div>
+
+        <!-- 상세 날씨 정보 -->
+        <div class="weather-details">
+          <div class="detail-item">
+            <span class="label">강수확률</span>
+            <span id="pop" class="value highlight">-- %</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">풍속</span>
+            <span id="windSpeed" class="value">-- m/s</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">풍향</span>
+            <span id="windDirection" class="value">--°</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 패널 3: 24시간 온도 & 강수확률 그래프 -->
+      <section class="hourly-section">
+        <div class="section-title-group">
+          <h3>24시간 시간별 추이</h3>
+          <span id="selectedDateLabel" class="selected-date-badge">오늘</span>
+        </div>
+        <!-- Chart.js 캔버스 영역 -->
+        <div class="chart-wrapper">
+          <canvas id="hourlyChart"></canvas>
+        </div>
+      </section>
+
+      <!-- 패널 4: 과거 & 향후 7일간 타임라인 일기예보 -->
+      <section class="forecast-section">
+        <h3>날씨 타임라인 <span class="sub-text">(날짜 클릭 시 위 그래프가 해당 날짜로 변경됩니다)</span></h3>
+        <div id="forecastContainer" class="forecast-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p>Powered by Open-Meteo API | Weather Dashboard</p>
+  </footer>
+
+  <script src="app.js1"></script>
+</body>
+</html>

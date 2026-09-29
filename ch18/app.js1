@@ -1,0 +1,328 @@
+// Open-Meteo API 주소
+const GEOCODING_API_URL = "https://geocoding-api.open-meteo.com/v1/search";
+const WEATHER_API_URL = "https://api.open-meteo.com/v1/forecast";
+
+// DOM 요소
+const cityInput = document.getElementById("cityInput");
+const searchBtn = document.getElementById("searchBtn");
+const errorMessage = document.getElementById("errorMessage");
+const loading = document.getElementById("loading");
+const resultContainer = document.getElementById("resultContainer");
+
+const cityNameEl = document.getElementById("cityName");
+const countryNameEl = document.getElementById("countryName");
+const latitudeEl = document.getElementById("latitude");
+const longitudeEl = document.getElementById("longitude");
+const temperatureEl = document.getElementById("temperature");
+const weatherIconEl = document.getElementById("weatherIcon");
+const weatherStatusEl = document.getElementById("weatherStatus");
+const popEl = document.getElementById("pop");
+const windSpeedEl = document.getElementById("windSpeed");
+const windDirectionEl = document.getElementById("windDirection");
+
+const selectedDateLabel = document.getElementById("selectedDateLabel");
+const forecastContainer = document.getElementById("forecastContainer");
+
+let globalWeatherData = null; // API 데이터 전역 저장
+let hourlyChartInstance = null; // Chart.js 객체 참조 저장
+
+const CITY_NAME_MAP = {
+  "서울": "Seoul", "부산": "Busan", "인천": "Incheon", "대구": "Daegu",
+  "대전": "Daejeon", "광주": "Gwangju", "울산": "Ulsan", "제주": "Jeju",
+  "도쿄": "Tokyo", "런던": "London", "뉴욕": "New York", "파리": "Paris",
+  "시드니": "Sydney", "캔버라": "Canberra", "호주": "Canberra", "미국": "Washington",
+  "일본": "Tokyo", "영국": "London", "프랑스": "Paris", "중국": "Beijing"
+};
+
+function getWeatherDescription(code) {
+  const weatherMap = {
+    0: { text: "맑음", icon: "☀️" },
+    1: { text: "대체로 맑음", icon: "🌤️" },
+    2: { text: "구름 조금", icon: "⛅" },
+    3: { text: "흐림", icon: "☁️" },
+    45: { text: "안개", icon: "🌫️" },
+    48: { text: "짙은 안개", icon: "🌫️" },
+    51: { text: "이슬비", icon: "🌧️" },
+    61: { text: "약한 비", icon: "🌧️" },
+    63: { text: "비", icon: "🌧️" },
+    65: { text: "강한 비", icon: "🌧️" },
+    71: { text: "눈", icon: "❄️" },
+    95: { text: "뇌우", icon: "🌩️" }
+  };
+  return weatherMap[code] || { text: "정보 없음", icon: "🌡️" };
+}
+
+function getDayInfo(dateStr) {
+  const targetDate = new Date(dateStr);
+  const today = new Date();
+  
+  const targetFormatted = targetDate.toISOString().split("T")[0];
+  const todayFormatted = today.toISOString().split("T")[0];
+
+  const month = targetDate.getMonth() + 1;
+  const day = targetDate.getDate();
+  const dateText = `${month}/${day}`;
+
+  if (targetFormatted === todayFormatted) {
+    return { label: "오늘", type: "today", dateText, fullDate: targetFormatted };
+  } else if (targetDate < new Date(todayFormatted)) {
+    return { label: "과거", type: "past", dateText, fullDate: targetFormatted };
+  } else {
+    return { label: "예보", type: "future", dateText, fullDate: targetFormatted };
+  }
+}
+
+async function handleSearch() {
+  const query = cityInput.value.trim();
+  if (!query) {
+    showError("도시 이름을 입력해주세요.");
+    return;
+  }
+
+  resetUI();
+  showLoading(true);
+
+  try {
+    const locationData = await fetchLocation(query);
+    const weatherData = await fetchWeather(locationData.latitude, locationData.longitude);
+    globalWeatherData = weatherData;
+    renderResult(locationData, weatherData);
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function fetchLocation(cityName) {
+  const targetQuery = CITY_NAME_MAP[cityName] || cityName;
+  const url = `${GEOCODING_API_URL}?name=${encodeURIComponent(targetQuery)}&count=1&language=ko&format=json`;
+  
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("도시 위치 정보를 가져오는데 실패했습니다.");
+
+  const data = await response.json();
+  if (!data.results || data.results.length === 0) {
+    throw new Error(`'${cityName}'에 해당하는 도시를 찾을 수 없습니다. 영문 이름(예: Seoul, Sydney)으로 검색해보세요.`);
+  }
+
+  const result = data.results[0];
+  return {
+    name: result.name,
+    country: result.country || "국가 정보 없음",
+    latitude: result.latitude,
+    longitude: result.longitude
+  };
+}
+
+async function fetchWeather(lat, lon) {
+  const url = `${WEATHER_API_URL}?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=temperature_2m,precipitation_probability,weathercode&timezone=auto&past_days=3&forecast_days=4`;
+
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("날씨 정보를 가져오는데 실패했습니다.");
+
+  return await response.json();
+}
+
+function renderResult(location, weather) {
+  const current = weather.current_weather;
+  const daily = weather.daily;
+  const currentWeatherInfo = getWeatherDescription(current.weathercode);
+
+  cityNameEl.textContent = location.name;
+  countryNameEl.textContent = location.country;
+  latitudeEl.textContent = location.latitude.toFixed(2);
+  longitudeEl.textContent = location.longitude.toFixed(2);
+
+  temperatureEl.textContent = Math.round(current.temperature);
+  weatherIconEl.textContent = currentWeatherInfo.icon;
+  weatherStatusEl.textContent = currentWeatherInfo.text;
+  
+  const todayStr = new Date().toISOString().split("T")[0];
+  const todayIndex = daily.time.findIndex(timeStr => timeStr === todayStr);
+  const todayPop = todayIndex !== -1 ? (daily.precipitation_probability_max[todayIndex] ?? 0) : 0;
+  
+  popEl.textContent = `${todayPop}%`;
+  windSpeedEl.textContent = `${current.windspeed} m/s`;
+  windDirectionEl.textContent = `${current.winddirection}°`;
+
+  // 1. 7일 타임라인 생성
+  forecastContainer.innerHTML = "";
+
+  for (let i = 0; i < daily.time.length; i++) {
+    const dayInfo = getDayInfo(daily.time[i]);
+    const dayWeather = getWeatherDescription(daily.weathercode[i]);
+    const maxTemp = Math.round(daily.temperature_2m_max[i]);
+    const minTemp = Math.round(daily.temperature_2m_min[i]);
+    const popVal = daily.precipitation_probability_max[i] ?? 0;
+
+    const card = document.createElement("div");
+    card.className = `forecast-card ${dayInfo.type} ${dayInfo.fullDate === todayStr ? "active" : ""}`;
+    card.dataset.date = daily.time[i];
+
+    card.addEventListener("click", () => {
+      document.querySelectorAll(".forecast-card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+
+      const labelText = dayInfo.type === "today" ? "오늘" : `${dayInfo.dateText} (${dayInfo.label})`;
+      renderHourlyChart(daily.time[i], labelText);
+    });
+
+    card.innerHTML = `
+      <span class="forecast-tag">${dayInfo.label}</span>
+      <div class="forecast-date">${dayInfo.dateText}</div>
+      <div class="forecast-icon">${dayWeather.icon}</div>
+      <div class="forecast-pop">💧 ${popVal}%</div>
+      <div class="forecast-temp">
+        <span class="max">${maxTemp}°</span>
+        <span class="min">${minTemp}°</span>
+      </div>
+    `;
+
+    forecastContainer.appendChild(card);
+  }
+
+  // 2. 기본값으로 "오늘"의 24시간 차트 그리디
+  renderHourlyChart(todayStr, "오늘");
+
+  resultContainer.classList.remove("hidden");
+}
+
+// Chart.js를 이용해 24시간 온도 및 강수확률 차트 그리기
+function renderHourlyChart(targetDateStr, labelText) {
+  if (!globalWeatherData || !globalWeatherData.hourly) return;
+
+  selectedDateLabel.textContent = labelText;
+
+  const hourly = globalWeatherData.hourly;
+  const hours = [];
+  const temps = [];
+  const pops = [];
+
+  // 선택된 날짜에 해당하는 24시간 데이터 파싱
+  for (let i = 0; i < hourly.time.length; i++) {
+    if (hourly.time[i].startsWith(targetDateStr)) {
+      const timeObj = new Date(hourly.time[i]);
+      hours.push(`${String(timeObj.getHours()).padStart(2, "0")}:00`);
+      temps.push(Math.round(hourly.temperature_2m[i]));
+      pops.push(hourly.precipitation_probability[i] ?? 0);
+    }
+  }
+
+  const ctx = document.getElementById("hourlyChart").getContext("2d");
+
+  // 기존 차트 객체가 있다면 파괴하여 리소스 해제 후 다시 생성
+  if (hourlyChartInstance) {
+    hourlyChartInstance.destroy();
+  }
+
+  // 복합 차트(꺾은선 + 막대) 생성
+  hourlyChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: hours,
+      datasets: [
+        {
+          type: "line",
+          label: "온도 (°C)",
+          data: temps,
+          borderColor: "#f97316", // 주황색 꺾은선
+          backgroundColor: "rgba(249, 115, 22, 0.1)",
+          borderWidth: 2.5,
+          tension: 0.3,
+          fill: true,
+          yAxisID: "y-temp",
+          pointRadius: 3,
+          pointHoverRadius: 6
+        },
+        {
+          type: "bar",
+          label: "강수확률 (%)",
+          data: pops,
+          backgroundColor: "rgba(37, 99, 235, 0.35)", // 파란색 막대
+          borderColor: "#2563eb",
+          borderWidth: 1,
+          borderRadius: 4,
+          yAxisID: "y-pop"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          position: "top",
+          labels: {
+            usePointStyle: true,
+            boxWidth: 8
+          }
+        },
+        tooltip: {
+          padding: 10,
+          backgroundColor: "rgba(17, 24, 39, 0.9)"
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false }
+        },
+        "y-temp": {
+          type: "linear",
+          position: "left",
+          title: {
+            display: true,
+            text: "온도 (°C)",
+            color: "#f97316",
+            font: { size: 11 }
+          },
+          grid: {
+            color: "#f3f4f6"
+          }
+        },
+        "y-pop": {
+          type: "linear",
+          position: "right",
+          min: 0,
+          max: 100,
+          title: {
+            display: true,
+            text: "강수확률 (%)",
+            color: "#2563eb",
+            font: { size: 11 }
+          },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function showError(message) {
+  errorMessage.textContent = message;
+  errorMessage.classList.remove("hidden");
+}
+
+function showLoading(isLoading) {
+  if (isLoading) {
+    loading.classList.remove("hidden");
+  } else {
+    loading.classList.add("hidden");
+  }
+}
+
+function resetUI() {
+  errorMessage.classList.add("hidden");
+  resultContainer.classList.add("hidden");
+}
+
+searchBtn.addEventListener("click", handleSearch);
+cityInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    handleSearch();
+  }
+});
