@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>ch 18 index01.html 파일</h1>
+
+    <script>
+        // 샘플 데이터
+        const todo = {userId: 1, id : 100, title: "오늘 복습 ", completed:false };
+
+        // 객체 --> JSON 문자열 (서버로 보낼 때)
+        const jsonText = JSON.stringify(todo);
+        console.log(jsonText);
+        console.log(typeof jsonText);
+
+        // JSON 문자열 --> 객체 (서버에서 받았을 떄)
+        const parsedTodo = JSON.parse(jsonText);
+        console.log(parsedTodo);
+        console.log(typeof parsedTodo);
+
+        console.log(parsedTodo.id);
+        console.log(parsedTodo.title);
+
+        // 오류 확인
+        try {
+            const badTodo = JSON.parse("asdfghkase : asdfksefsef");
+        } catch(error) {
+            console.log("잘못된 JSON 형식입니다.")
+        }
+    </script>
+</body>
+</html>
